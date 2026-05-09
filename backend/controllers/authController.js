@@ -18,7 +18,7 @@ const registerUser = async (req, res) => {
     // Build profileImageUrl safely
     let profileUrl = "";
     if (req.file) {
-      profileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+      profileUrl = `uploads/${req.file.filename}`;
     } else if (typeof profileImageUrl === "string") {
       profileUrl = profileImageUrl;
     } else if (typeof profileImageUrl === "object" && profileImageUrl?.url) {
