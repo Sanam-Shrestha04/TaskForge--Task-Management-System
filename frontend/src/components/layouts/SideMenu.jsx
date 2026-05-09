@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { SIDE_MENU_DATA, SIDE_MENU_USER_DATA } from '../../utils/data';
 import { UserContext } from '../../context/userContext';
 import { useNavigate } from 'react-router-dom';
-import userIcon from '../../assets/user-icon.jpg'; // adjust the path if needed
+import userIcon from '../../assets/user-icon.jpg'; 
 
 const SideMenu = ({ activeMenu }) => {
     const { user, clearUser } = useContext(UserContext);
