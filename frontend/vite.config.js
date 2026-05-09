@@ -4,11 +4,24 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+
+  base: "/",
+
   server: {
-    host: true, // allows Vite to listen on any host
-    port: 5173, // optional, your dev port
+    host: true,
+    port: 5173,
   },
-  preview: {
-    allowedHosts: ['taskforgem.onrender.com'], // add your Render host here
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          charts: ["recharts"],
+          ui: ["@material-tailwind/react"],
+          utils: ["axios", "moment", "react-hot-toast"],
+        },
+      },
+    },
   },
 });

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, lazy, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,78 +7,78 @@ import {
   Navigate,
 } from "react-router-dom";
 
-// Auth Pages
-import Login from "./pages/Auth/Login";
-import SignUp from "./pages/Auth/SignUp";
-import ForgotPassword from "./pages/Auth/forgot-password";
-import ResetPassword from "./pages/Auth/reset-password";
-import VerifyOTP from "./pages/Auth/verify";
-import ResendVerification from "./pages/Auth/ResendVerification"; // <- Added resend verification
-
-// Admin Pages
-import ManageTasks from "./pages/Admin/ManageTasks";
-import CreateTask from "./pages/Admin/CreateTask";
-import ManageUsers from "./pages/Admin/ManageUsers";
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-
-// User Pages
-import UserDashboard from "./pages/User/UserDashboard";
-import MyTasks from "./pages/User/MyTasks";
-import ViewTaskDetails from "./pages/User/ViewTaskDetails";
-
-// Routes & Context
-import PrivateRoute from "./routes/PrivateRoute";
 import UserProvider, { UserContext } from "./context/userContext";
 import { Toaster } from "react-hot-toast";
+import PrivateRoute from "./routes/PrivateRoute";
+
+// Auth Pages - lazy loaded
+const Login = lazy(() => import("./pages/Auth/Login"));
+const SignUp = lazy(() => import("./pages/Auth/SignUp"));
+const ForgotPassword = lazy(() => import("./pages/Auth/forgot-password"));
+const ResetPassword = lazy(() => import("./pages/Auth/reset-password"));
+const VerifyOTP = lazy(() => import("./pages/Auth/verify"));
+const ResendVerification = lazy(() => import("./pages/Auth/ResendVerification"));
+
+// Admin Pages - lazy loaded
+const AdminDashboard = lazy(() => import("./pages/Admin/AdminDashboard"));
+const ManageTasks = lazy(() => import("./pages/Admin/ManageTasks"));
+const CreateTask = lazy(() => import("./pages/Admin/CreateTask"));
+const ManageUsers = lazy(() => import("./pages/Admin/ManageUsers"));
+
+// User Pages - lazy loaded
+const UserDashboard = lazy(() => import("./pages/User/UserDashboard"));
+const MyTasks = lazy(() => import("./pages/User/MyTasks"));
+const ViewTaskDetails = lazy(() => import("./pages/User/ViewTaskDetails"));
+
+// Simple loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500" />
+  </div>
+);
 
 const App = () => {
   return (
     <UserProvider>
       <div>
         <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/verify" element={<VerifyOTP />} /> {/* OTP Route */}
-            <Route
-              path="/auth/resend-verification"
-              element={<ResendVerification />}
-            /> {/* Resend Verification */}
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/verify" element={<VerifyOTP />} />
+              <Route path="/auth/resend-verification" element={<ResendVerification />} />
 
-            {/* Admin Routes */}
-            <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/tasks" element={<ManageTasks />} />
-              <Route path="/admin/create-task" element={<CreateTask />} />
-              <Route path="/admin/users" element={<ManageUsers />} />
-              <Route path="/tasks/:taskId" element={<CreateTask />} />
-            </Route>
+              {/* Admin Routes */}
+              <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/tasks" element={<ManageTasks />} />
+                <Route path="/admin/create-task" element={<CreateTask />} />
+                <Route path="/admin/users" element={<ManageUsers />} />
+                <Route path="/tasks/:taskId" element={<CreateTask />} />
+              </Route>
 
-            {/* User Routes */}
-            <Route element={<PrivateRoute allowedRoles={["user"]} />}>
-              <Route path="/user/dashboard" element={<UserDashboard />} />
-              <Route path="/user/tasks" element={<MyTasks />} />
-              <Route
-                path="/user/task-details/:id"
-                element={<ViewTaskDetails />}
-              />
-            </Route>
+              {/* User Routes */}
+              <Route element={<PrivateRoute allowedRoles={["user"]} />}>
+                <Route path="/user/dashboard" element={<UserDashboard />} />
+                <Route path="/user/tasks" element={<MyTasks />} />
+                <Route path="/user/task-details/:id" element={<ViewTaskDetails />} />
+              </Route>
 
-            {/* Default Route */}
-            <Route path="/" element={<Root />} />
-          </Routes>
+              {/* Default Route */}
+              <Route path="/" element={<Root />} />
+            </Routes>
+          </Suspense>
         </Router>
       </div>
 
       <Toaster
         toastOptions={{
           className: "",
-          style: {
-            fontSize: "13px",
-          },
+          style: { fontSize: "13px" },
         }}
       />
     </UserProvider>
@@ -87,19 +87,11 @@ const App = () => {
 
 export default App;
 
-// Root redirect based on user role
 const Root = () => {
   const { user, loading } = useContext(UserContext);
-
   if (loading) return <Outlet />;
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  return user.role === "admin" ? (
-    <Navigate to="/admin/dashboard" />
-  ) : (
-    <Navigate to="/user/dashboard" />
-  );
+  if (!user) return <Navigate to="/login" />;
+  return user.role === "admin"
+    ? <Navigate to="/admin/dashboard" />
+    : <Navigate to="/user/dashboard" />;
 };

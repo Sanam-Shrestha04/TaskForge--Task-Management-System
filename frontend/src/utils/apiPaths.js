@@ -1,5 +1,5 @@
-export const BASE_URL = "http://localhost:8000/";
-// const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+// export const BASE_URL = "http://localhost:8000/";
+export const BASE_URL = import.meta.env.VITE_BACKEND_URL;
 export const fetchTasks = async () => {
   const res = await fetch(`${BASE_URL}/api/tasks`);
   return res.json();
