@@ -1,8 +1,8 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { UserContext } from "../../context/userContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import axiosInstance from "../../utils/axiosInstance";
 
 export default function VerifyOTP() {
   const location = useLocation();
@@ -23,10 +23,10 @@ export default function VerifyOTP() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const [failedAttempts, setFailedAttempts] = useState(
-    Number(localStorage.getItem("otpFailedAttempts")) || 0
+    Number(localStorage.getItem("otpFailedAttempts")) || 0,
   );
   const [lockoutTimer, setLockoutTimer] = useState(
-    Number(localStorage.getItem("otpLockoutTimer")) || 0
+    Number(localStorage.getItem("otpLockoutTimer")) || 0,
   );
 
   const inputsRef = useRef([]);
@@ -89,7 +89,7 @@ export default function VerifyOTP() {
     setSuccess("");
 
     try {
-      const res = await axios.post("http://localhost:8000/api/auth/verify-otp", {
+      const res = await axiosInstance.post("/api/auth/verify-otp", {
         email: String(email).trim(),
         otp: otpValue,
       });
@@ -105,10 +105,15 @@ export default function VerifyOTP() {
       localStorage.setItem("otpFailedAttempts", 0);
 
       setTimeout(() => {
-        navigate(user.role === "admin" ? "/admin/dashboard" : "/user/dashboard");
+        navigate(
+          user.role === "admin" ? "/admin/dashboard" : "/user/dashboard",
+        );
       }, 1500);
     } catch (err) {
-      console.error("OTP verification error:", err.response?.data || err.message);
+      console.error(
+        "OTP verification error:",
+        err.response?.data || err.message,
+      );
       setError(err.response?.data?.message || "OTP verification failed.");
 
       setFailedAttempts((prev) => {
@@ -136,7 +141,7 @@ export default function VerifyOTP() {
     setOtp(["", "", "", "", "", ""]);
 
     try {
-      const res = await axios.post("http://localhost:8000/api/auth/resend-otp", {
+      const res = await axiosInstance.post("/api/auth/resend-otp", {
         email: String(email).trim(),
       });
 
@@ -152,10 +157,14 @@ export default function VerifyOTP() {
   };
 
   if (!email)
-    return <p className="text-center mt-20 text-gray-700">No email provided.</p>;
+    return (
+      <p className="text-center mt-20 text-gray-700">No email provided.</p>
+    );
 
   const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60).toString().padStart(1, "0");
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(1, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
@@ -167,13 +176,15 @@ export default function VerifyOTP() {
           Verify Your Email
         </h2>
         <p className="text-gray-500 text-center mb-6">
-          Enter the 6-digit code sent to <span className="font-semibold">{email}</span>
+          Enter the 6-digit code sent to{" "}
+          <span className="font-semibold">{email}</span>
         </p>
 
         {/* Lockout message displayed once in blue */}
         {lockoutTimer > 0 && (
           <p className="text-red-600 text-center mb-4 font-semibold">
-            Too many attempts. Please wait {formatTime(lockoutTimer)} before trying again.
+            Too many attempts. Please wait {formatTime(lockoutTimer)} before
+            trying again.
           </p>
         )}
 
@@ -181,7 +192,9 @@ export default function VerifyOTP() {
         {lockoutTimer === 0 && error && (
           <p className="text-red-500 text-center mb-4">{error}</p>
         )}
-        {success && <p className="text-green-600 text-center mb-4">{success}</p>}
+        {success && (
+          <p className="text-green-600 text-center mb-4">{success}</p>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="flex justify-between gap-3 relative">
@@ -215,7 +228,12 @@ export default function VerifyOTP() {
           <button
             type="button"
             onClick={handleResend}
-            disabled={resendLoading || resendCooldown > 0 || verified || lockoutTimer > 0}
+            disabled={
+              resendLoading ||
+              resendCooldown > 0 ||
+              verified ||
+              lockoutTimer > 0
+            }
             className="w-full py-3 rounded-xl text-white font-medium transition-shadow bg-green-500 hover:bg-green-600 shadow-lg cursor-pointer disabled:cursor-not-allowed"
           >
             Resend OTP
